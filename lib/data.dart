@@ -13,8 +13,10 @@ class StudentData {
       required this.lastName,
       required this.course,
       required this.score,
-      required this.createAt,
-      required this.updateAt});
+      String? createAt,
+      String? updateAt})
+      : createAt = createAt ?? DateTime.now().toIso8601String(),
+        updateAt = updateAt ?? DateTime.now().toIso8601String();
   StudentData.fromJson(Map<String, dynamic> json)
       : firstName = json['first_name'],
         lastName = json['last_name'],
@@ -22,6 +24,15 @@ class StudentData {
         score = json['score'],
         createAt = json['createAt'],
         updateAt = json['updateAt'];
+
+  Map<String, dynamic> toJson() => {
+        'first_name': firstName,
+        'last_name': lastName,
+        'course': course,
+        'score': score,
+        'createAt': createAt,
+        'updateAt': updateAt,
+      };
 }
 
 class HttpClient {
@@ -32,9 +43,15 @@ Future<List<StudentData>> getStudents() async {
   final response = await HttpClient.instance.get('students');
   final List<StudentData> students = [];
   if (response.data is List<dynamic>) {
-    (response.data as List<dynamic>).forEach((element) {
+    for (var element in (response.data as List<dynamic>)) {
       students.add(StudentData.fromJson(element));
-    });
+    }
   }
   return students;
+}
+
+Future<StudentData> saveStudent(StudentData student) async {
+  final response =
+      await HttpClient.instance.post('students', data: student.toJson());
+  return StudentData.fromJson(response.data);
 }
